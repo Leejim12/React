@@ -1,288 +1,179 @@
-## MySQL 정리
+# React 복습/ 내용 정리
 
-
-#SQL문 정리
-
--. MySQL Login
+### Node.js
+1. Webpack, Babel같은 도구들을 사용하기 위해 필요
+* Babel : 자바스크립트 문법 확장해주는 도구 (구형 브라우저에서도 JS 문법이 제대로 실행될 수 있게 해줌) 
 ```
-루트 로그인 : mysql -u root -p
-정상 로그인 : mysql -h ip주소 -u 계정 -p;
+JSX ------> JS
+    (Babel)
 ```
-
-## 기본 문법
--. 유저 보여주기
+ㅁ. 설치방법
+* 윈도우
 ```
-select user, host from mysql.user;
+https://nodejs.org/en/
 ```
--. 유저 생성
+* 맥
 ```
-create users '유저명'@'localhost' identified by 'somepassword';
-```
--. 유저 삭제
-```
-Drop user 'someuser'@'localhost';
-```
--. 접근권한 부여
-```
-Grant All PRIVILEGES ON *.* TO 'someuser'@'localhost';
-FLUSH PRIVILEGES;
+$ curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.33.8/install.sh | bash
+$ nvm install --lts
 ```
 
--. 사용자의 권한 확인.
+### useState 훅
 ```
-Show Grants for 'someuser'@'localhost';
+import React, { useState } from 'react';
+
+function Counter() {
+  const [number, setNumber] = useState(0); // 기본값 0
+
+  const onIncrease = () => {
+    setNumber(number + 1);
+  }
+
+  const onDecrease = () => {
+    setNumber(number - 1);
+  }
+
+  return (
+    <div>
+      <h1>{number}</h1>
+      <button onClick={onIncrease}>+1</button>
+      <button onClick={onDecrease}>-1</button>
+    </div>
+  );
+}
+
+export default Counter;
+```
+* useState가 없다면?
+```
+const numberState = useState(0);
+const number = numberState[0];
+const setNumber = numberState[1];
 ```
 
--. 권한 회수
-```
-REVOKE ALL PRIVILEGES, GRANT OPTION FROM 'someuser'@'localhost';
-( REVOKE UPDATE )
-```
--. 데이터베이스 보기
-```
-Show Databases
-```
--. DB 생성
-```
-Create Database dbname;
-```
--. DB 선택
-```
-use dbname;
-```
--. 외래키 설정
-1. 이미 있는 테이블
-```
-ALTER TABLE Reservation
-ADD CONSTRAINT CustomerID
-FOREIGN KEY (ID)
-REFERENCES Customer (ID);
-```
-2. 테이블 생성 시 애초에 
-```
-CREATE TABLE Test2
-(
-    ID INT,
-    ParentID INT,
-    FOREIGN KEY (ParentID)
-    REFERENCES Test1(ID) ON UPDATE CASCADE
-);
-```
-
-## 테이블 관련
--. 테이블 생성
-```
-CREATE TABLE users( id INT AUTO_INCREMENT,
-first_name VARCHAR(100),
-last_name VARCHAR(100),
-email VARCHAR(50),
-password VARCHAR(20),
-location VARCHAR(100),
-dept VARCHAR(100),
-is_admin TINYINT(1),
-register_date DATETIME,
-PRIMARY KEY(id)
-);
-```
--. 인덱스 생성
-```
-CREATE INDEX idx_location On users(location);
-DROP INDEX idx_location ON users;
-```
--. 외래키와 함께 테이블 생성
-```
-CREATE TABLE posts(
-id INT AUTO_INCREMENT,
-user_id INT,
-title VARCHAR(100),
-body TEXT,
-publish_date DATETIME DEFAULT CURRENT_TIMESTAMP,
-PRIMARY KEY(id),
-FOREIGN KEY (user_id) REFERENCES users(id)
-);
-```
-
--. 외래키(2개)와 함께 테이블 생성
-```
-CREATE TABLE comments(
-id INT AUTO_INCREMENT,
-post_id INT,
-user_id INT,
-body TEXT,
-publish_date DATETIME DEFAULT CURRENT_TIMESTAMP,
-PRIMARY KEY(id),
-FOREIGN KEY(user_id) references users(id),
-FOREIGN KEY(post_id) references posts(id)
-);
-```
+### useRef
+1. 개념
+JS에서 Dom을 선택해야 할 때, getElementById, querySelector 등의 Dom selector를 사용했음
+-> 리액트에서는 ref를 사용.
 
 
---------------------------------------------------
-## Join
-
--. 내부조인
-```
-Select
-users.first_name,
-users.last_name,
-posts.title,
-posts.publish_date
-from users u
-inner join posts p
-On u.id = p.user_id
-Order by p.title; 
-```
--. Left Join 
-* left join : 일치하는 것 만
-```
-SELECT
-comments.body,
-posts.title
-FROM comments
-LEFT JOIN posts ON posts.id = comments.post_id
-ORDER BY posts.title;
-```
--. 다중 join
-```
-SELECT
-comments.body,
-posts.title,
-users.first_name,
-users.last_name
-FROM comments
-INNER JOIN posts on posts.id = comments.post_id
-INNER JOIN users on users.id = comments.user_id
-ORDER BY posts.title;
-```
-
---------------------------------------------------
-## Select 관련
--. select 기본
-```
-SELECT * FROM users;
-SELECT first_name, last_name FROM users;
-```
-
--. select where
-```
-SELECT * FROM users WHERE location='Massachusetts';
-SELECT * FROM users WHERE location='Massachusetts' AND dept='sales';
-SELECT * FROM users WHERE is_admin = 1;
-SELECT * FROM users WHERE is_admin > 0;
-```
-
--. Order by
-```
-SELECT * FROM users ORDER BY last_name ASC;
-SELECT * FROM users ORDER BY last_name DESC;
-```
-
--. Concatenate Columns
-```
-SELECT CONCAT(first_name,' ', last_name) AS 'Name', dept FROM users;
-```
--. in Range
-```
-SELECT * FROM users WHERE age BETWEEN 20 AND 25;
-```
--. Like
-```
-SELECT * FROM users WHERE dept LIKE 'd%';
-SELECT * FROM users WHERE dept LIKE 'dev%';
-SELECT * FROM users WHERE dept LIKE '%t';
-SELECT * FROM users WHERE dept LIKE '%e%';
-```
--. Not Like
-```
-SELECT * FROM users WHERE dept NOT LIKE 'd%';
-```
--. Group by + Having
-```
-SELECT age FROM users GROUP BY age;
-SELECT age FROM users WHERE age > 20 GROUP BY age;
-SELECT age, avg(age) FROM users GROUP BY age HAVING avg(age) >=2;
-```
-
--. SubQuery
-```
-SELECT * FROM users WHERE location=
-(SELECT location FROM users WHERE email = 'sara@gmail.com’);
-```
---------------------------------------------------------
-## 집계함수
-```
-SELECT COUNT(id) FROM users;
-SELECT MAX(age) FROM users;
-SELECT MIN(age) FROM users;
-SELECT SUM(age) FROM users;
-SELECT UCASE(first_name), LCASE(last_name) FROM users;
-```
------------------------------------------------------------
-서브쿼리
-1. 평균급여보다 높은사람 조회
-```
-SELECT EMPNO,ENAME,SAL FROM EMP WHERE SAL > (SELECT AVG(SAL) FROM EMP)
-ORDER BY 3 DESC;
-```
-
-2. 부서번호 10인 사원 중 최대급여 받는 사원과 동일한 급여를 받는 사원
-```
-SELECT EMPNO,ENAME
-FROM EMP
-WHERE SAL = (SELECT MAX(SAL) FROM EMP WHERE DEPTNO = 10);
-```
 
 
--------------------------------------------------------------------
-
-
-## ERD 관련
--. ERD 그리는 방법
-1. SQL → ERD
-2. ERD → SQL
-  : 이게 맞다.
-
------------------------------------------------------------------
-## DB 관련
-1. 특징
-### 실시간 접근
+### API 연동
+1. requset 모듈, xml-js 모듈 설치
+* 명령어
 ```
-사용자수가 많아져도 실시간 응답 필요.
+request 모듈 : yarn add request
+xml-js 모듈 : yarn add xml-js
 ```
-### 변화가능성
+* 기타 모듈
 ```
-현실세계 반영해야함.
-```
-### 동시공용
-```
-여러 사용자 동시 사용 가능해야함.
-```
-### 내용 기반 참조
-```
-저장 위치 알 필요 없음. --> 값만을 이용해서 데이터 접근이 가능해야함.
+xml2json : npm install xml2json
+util : npm i react-util
 ```
 
-2. 설계 단계
--. 단계별 주요 작업 내용
+2. axios 라이브러리 설치
+: API를 호출하기 위해 사용하는 라이브러리
+* 설치 명령어
+```
+cd 해당경로
+yarn add axios
+```
+* axios 기본 명령어
+```
+Get : 데이터 조회
+Post : 데이터 등록
+Put : 데이터 수정
+Delete : 데이터 제거
 ```
 
+### 예제1. 클릭 및 카운트
+1. App.js
 ```
+import React from "react";
+import "./styles.css";
+import Counter from "./Counter";
+import AutoCounter from "./AutoCounter";
+import ManualCounter from "./ManualCounter";
 
-ㅁ. 관계형 데이터 모델 구조
+export default function App() {
+  return (
+    <div className="App">
+      <Counter />
+      <hr />
+      <AutoCounter />
+      <hr />
+      <ManualCounter />
+    </div>
+  );
+}
 ```
-1. 릴레이션
-2. 2차원 테이블 형태 
--. 열 == column == Attribute ** Domain : 속성이 가질 수 있는 값 범위
--. 행 == Row == Tuple
+*  counter.js
 ```
+import React, { useState } from "react";
 
-#### 릴레이션 특징
-```
-1. 유일성 : 모든 튜플은 다른 값
-2. 무순서성 : 순서없음.
-3. 원자성 : 분해불가
-```
+function Counter() {
+  const [count, setCount] = useState(0);
+  console.log(`랜더링... count: ${count}`);
 
------------------------------------------------------------------
+  return (
+    <>
+      <p>{count}번 클릭하셨습니다.</p>
+      <button onClick={() => setCount((count) => count + 1)}>클릭</button>
+    </>
+  );
+}
 
-"# React" 
+export default Counter;
+
+```
+* AutoCounter.js
+```
+import React, { useState, useEffect } from "react";
+
+function AutoCounter() {
+  const [count, setCount] = useState(0);
+  console.log(`랜더링... count: ${count}`);
+
+  useEffect(() => {
+    const intervalId = setInterval(() => setCount((count) => count + 1), 1000);
+    return () => clearInterval(intervalId);
+  }, []);
+
+  return <p>자동 카운트: {count}</p>;
+}
+
+export default AutoCounter;
+```
+* ManualCounter.js
+```
+import React, { useState, useRef } from "react";
+
+function ManualCounter() {
+  const [count, setCount] = useState(0);
+  const intervalId = useRef(null);
+  console.log(`랜더링... count: ${count}`);
+
+  const startCounter = () => {
+    intervalId.current = setInterval(
+      () => setCount((count) => count + 1),
+      1000
+    );
+    console.log(`시작... intervalId: ${intervalId.current}`);
+  };
+
+  const stopCounter = () => {
+    clearInterval(intervalId.current);
+    console.log(`정지... intervalId: ${intervalId.current}`);
+  };
+
+  return (
+    <>
+      <p>자동 카운트: {count}</p>
+      <button onClick={startCounter}>시작</button>
+      <button onClick={stopCounter}>정지</button>
+    </>
+  );
+}
+export default ManualCounter;
+```
